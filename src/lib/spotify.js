@@ -1,3 +1,4 @@
+import { keyboard } from '@testing-library/user-event/dist/keyboard';
 import axios from 'axios';
 
 class SpotifyClient {
@@ -31,6 +32,19 @@ class SpotifyClient {
       }
     );
     return res.data;
+  }
+
+  async searchSongs(keyword) {
+    const res = await axios.get('https://api.spotify.com/v1/search', {
+      headers: {
+        Authorization: 'Bearer ' + this.token,
+      },
+      params: {
+        q: keyword,
+        type: 'track',
+      },
+    });
+    return res.data.tracks;
   }
 }
 

@@ -2,13 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { SongList } from './components/SongList';
 import spotify from './lib/spotify';
 import { Player } from './components/Player';
+import { SearchInput } from './components/SearchInput';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [popularSongs, setPopularSongs] = useState([]);
   const [isPlay, setIsPlay] = useState(false);
   const [selectedSong, setSelectedSong] = useState();
+  const [searchItem, setSearchItem] = useState('');
+  const [searchedSong, setSearchedSong] = useState();
   const audioRef = useRef(null);
+  const isSearchedSongs = searchedSong != null;
 
   useEffect(() => {
     fetchPopularSongs();
@@ -24,6 +28,14 @@ export default function App() {
     setIsLoading(false);
   };
 
+  const searchedSongs = async () => {
+    setIsLoading(true);
+    const result = await spotify.searchSongs(searchItem);
+    console.log(result);
+    setSearchedSong(result.items);
+    setIsLoading(false);
+  };
+
   const handleSongSelected = async (song) => {
     // 選択した音楽の再生状態を管理する
     setSelectedSong(song);
@@ -34,6 +46,10 @@ export default function App() {
     } else {
       pauseSong();
     }
+  };
+
+  const handleSearchedSong = (e) => {
+    setSearchItem(e.target.value);
   };
 
   const playSong = () => {
@@ -60,11 +76,14 @@ export default function App() {
         <header className="flex justify-between items-center mb-10">
           <h1 className="text-4xl font-bold">Music App</h1>
         </header>
+        <SearchInput onSearch={handleSearchedSong} onSubmit={searchedSongs} />
         <section>
-          <h2 className="text-2xl font-semibold mb-5">Popular Songs</h2>
+          <h2 className="text-2xl font-semibold mb-5">
+            {isSearchedSongs ? 'Search Result' : 'Popular Songs'}
+          </h2>
           <SongList
             isLoading={isLoading}
-            popularSongs={popularSongs}
+            songs={isSearchedSongs ? searchedSong : popularSongs}
             onSongSelected={handleSongSelected}
           />
         </section>
