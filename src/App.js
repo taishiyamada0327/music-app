@@ -3,6 +3,7 @@ import { SongList } from './components/SongList';
 import spotify from './lib/spotify';
 import { Player } from './components/Player';
 import { SearchInput } from './components/SearchInput';
+import { Pagination } from './components/Pagination';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,8 +12,12 @@ export default function App() {
   const [selectedSong, setSelectedSong] = useState();
   const [searchItem, setSearchItem] = useState('');
   const [searchedSong, setSearchedSong] = useState();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasPrev, setHasPrev] = useState(false);
+  const [hasNext, setHasNext] = useState(false);
   const audioRef = useRef(null);
   const isSearchedSongs = searchedSong != null;
+  const limit = 20;
 
   useEffect(() => {
     fetchPopularSongs();
@@ -28,11 +33,13 @@ export default function App() {
     setIsLoading(false);
   };
 
-  const searchedSongs = async () => {
+  const searchedSongs = async (page) => {
     setIsLoading(true);
-    const result = await spotify.searchSongs(searchItem);
-    console.log(result);
+    const offset = parseInt(page) ? (parseInt(page) - 1) * limit : 0;
+    const result = await spotify.searchSongs(searchItem, limit, offset);
     setSearchedSong(result.items);
+    setHasPrev(result.previous != null);
+    setHasNext(result.next != null);
     setIsLoading(false);
   };
 
@@ -70,6 +77,18 @@ export default function App() {
     }
   };
 
+  const moveToNext = async () => {
+    const nextPage = currentPage + 1;
+    await searchedSongs(nextPage);
+    setCurrentPage(nextPage);
+  };
+
+  const moveToPrev = async () => {
+    const prevPage = currentPage - 1;
+    await searchedSongs(prevPage);
+    setCurrentPage(prevPage);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white">
       <main className="flex-1 p-8 mb-20">
@@ -86,6 +105,13 @@ export default function App() {
             songs={isSearchedSongs ? searchedSong : popularSongs}
             onSongSelected={handleSongSelected}
           />
+          {isSearchedSongs && (
+            <Pagination
+              moveToNext={hasNext ? moveToNext : null}
+              moveToPrev={hasPrev ? moveToPrev : null}
+              currentPage={currentPage}
+            />
+          )}
         </section>
       </main>
       {selectedSong != null && (
