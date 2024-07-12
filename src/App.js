@@ -27,9 +27,13 @@ export default function App() {
   const handleSongSelected = async (song) => {
     // 選択した音楽の再生状態を管理する
     setSelectedSong(song);
-    audioRef.current.src = song.preview_url;
-    audioRef.current.play();
-    playSong();
+    if (song.preview_url != null) {
+      audioRef.current.src = song.preview_url;
+      audioRef.current.play();
+      playSong();
+    } else {
+      pauseSong();
+    }
   };
 
   const playSong = () => {
